@@ -17,6 +17,9 @@
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
+git config user.name "someone"
+git config user.email "someone@someplace.com"
+
 git revert 722c2739ba62dcadc2a4b2ce0b92c1a34991c29e
 git revert 8c6cc8f468334adfd808628430c19ff0fb731bb9
 
