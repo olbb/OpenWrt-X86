@@ -17,6 +17,9 @@
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
+git revert 722c2739ba62dcadc2a4b2ce0b92c1a34991c29e
+git revert 8c6cc8f468334adfd808628430c19ff0fb731bb9
+
 +#src-git helloworld https://github.com/fw876/helloworld.git;main
 +src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main
 +src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;luci-smartdns-dev
