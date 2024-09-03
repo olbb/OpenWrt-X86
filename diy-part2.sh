@@ -23,5 +23,5 @@ rm -rf feeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang -b 22.x feeds/packages/lang/golang
 
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
-sed -i 's/luci-theme-bootstrap/luci-theme-infinityfreedom/g' feeds/luci/collections/luci/Makefile
+sed -i 's/luci-theme-bootstrap/luci-theme-infinityfreedom-ng/g' feeds/luci/collections/luci/Makefile
 sed -i 's/OpenWrt/OpenWrt-X86-Router/g' package/base-files/files/bin/config_generate
