@@ -20,8 +20,9 @@
 echo 'src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main' >>feeds.conf.default
 echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;luci-smartdns-dev' >>feeds.conf.default
 #echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >>feeds.conf.default
-echo 'src-git smartdns https://github.com/olbb/openwrt-smartdns' >>feeds.conf.default
+#echo 'src-git smartdns https://github.com/olbb/openwrt-smartdns' >>feeds.conf.default
 #echo 'src-git infinityfreedom https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git;classic' >>feeds.conf.default
 echo 'src-git luci-themMateriale-alpha https://github.com/derisamedia/luci-theme-alpha'
 git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
 git clone https://github.com/sbwml/luci-app-alist.git package/alist
+git clone https://github.com/olbb/openwrt-smartdns feeds/packages/net/smartdns/
