@@ -20,4 +20,6 @@
 sed -i '1i src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main' feeds.conf.default
 sed -i '2i src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;luci-smartdns-dev' feeds.conf.default
 
+git clone https://github.com/olbb/openwrt-smartdns.git feeds/packages/net/smartdns/
+
 
