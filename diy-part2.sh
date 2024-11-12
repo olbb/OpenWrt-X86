@@ -19,9 +19,16 @@
 # Modify hostname
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
 
-rm -rf feeds/packages/lang/golang
-git clone https://github.com/sbwml/packages_lang_golang -b 22.x feeds/packages/lang/golang
+rm -rf package/lean/luci-theme-argon
+git clone https://github.com/jerrykuku/luci-theme-argon.git package/lean/luci-theme-argon
+git clone https://github.com/jerrykuku/luci-app-argon-config.git package/lean/luci-app-argon-config
+
+git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
+git clone https://github.com/sbwml/luci-app-alist.git package/alist
+git clone https://github.com/olbb/openwrt-smartdns feeds/packages/net/smartdns/
+git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
+
 
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
-#sed -i 's/luci-theme-bootstrap/luci-theme-infinityfreedom/g' feeds/luci/collections/luci/Makefile
-sed -i 's/OpenWrt/OpenWrt-X86-Router/g' package/base-files/files/bin/config_generate
+#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+sed -i 's/OpenWrt/Me-X86-Router/g' package/base-files/files/bin/config_generate
