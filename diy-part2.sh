@@ -23,6 +23,14 @@ rm -rf package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-theme-argon.git package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-app-argon-config.git package/lean/luci-app-argon-config
 
+./scripts/feeds uninstal ddns-go
+./scripts/feeds uninstal alist
+./scripts/feeds uninstal smartdns
+./scripts/feeds uninstal luci-app-ddns-go
+./scripts/feeds uninstal luci-app-alist
+./scripts/feeds uninstal luci-app-smartdns
+
+
 git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
 git clone https://github.com/sbwml/luci-app-alist.git package/alist
 git clone https://github.com/olbb/openwrt-smartdns feeds/packages/net/smartdns/
