@@ -23,7 +23,7 @@ rm -rf package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-theme-argon.git package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-app-argon-config.git package/lean/luci-app-argon-config
 
-./scripts/feeds uninstall ddns-go alist smartdns luci-app-ddns-go luci-app-alist luci-app-smartdns
+#./scripts/feeds uninstall ddns-go alist smartdns luci-app-ddns-go luci-app-alist luci-app-smartdns
 
 echo "--------------------------------------start clone---------------------------------"
 pwd
