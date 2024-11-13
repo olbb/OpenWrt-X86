@@ -114,8 +114,8 @@ jobs:
 
     - name: Custom config after update
       run: |
-        cd openwrt
         chmod +x diy-custom.sh
+        cd openwrt
         $GITHUB_WORKSPACE/diy-custom.sh
         echo '-------------------------------feeds----------------------------------'
         tree -L 3 feeds
