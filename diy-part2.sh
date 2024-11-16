@@ -30,14 +30,14 @@ pwd
 
 git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
 git clone https://github.com/sbwml/luci-app-alist.git package/alist
-git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
+# git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
 
 ls package
 
 echo "-------------------------------------end clone--------------------------------------"
 
 #修改默认IP地址
-sed -i "s/192\.168\.[0-9]*\.[0-9]*/192.168.10.1/g" ./package/base-files/files/bin/config_generate
+sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
 #修改默认主机名
 sed -i "s/hostname='.*'/hostname=Me-X86-Router/g" ./package/base-files/files/bin/config_generate
 #修改默认时区
