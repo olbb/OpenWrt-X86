@@ -17,6 +17,8 @@
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
+echo "--------------------------start diy-part1.sh------------------------------------------"
+
 git checkout d71de44fbc5c5aab2d5c7b6ac6b1bdca5e6c6c23
 git log -n 5 --oneline
 
