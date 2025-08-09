@@ -97,8 +97,8 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo chown $USER:$GROUPS $GITHUB_WORKSPACE
         echo "-----------------------------------------------------------------------------"
-        node --version
-        npm --version
+        which node
+        which npm
         echo "-----------------------------------------------------------------------------"
 
     - name: Clone source code
