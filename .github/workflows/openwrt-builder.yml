@@ -101,6 +101,7 @@ jobs:
         which npm
         node -v
         npm -v 
+        chown -R 1001:128 "/home/runner/.npm"
         npm install semver
         echo "-----------------------------------------------------------------------------"
 
