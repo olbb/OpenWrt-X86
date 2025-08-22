@@ -29,7 +29,7 @@ echo "--------------------------------------start clone-------------------------
 pwd
 
 git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
-git clone https://github.com/sbwml/luci-app-openlist2 package/openlist
+git clone https://github.com/sbwml/luci-app-openlist2 package/openlist2
 # git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
 
 ls package
