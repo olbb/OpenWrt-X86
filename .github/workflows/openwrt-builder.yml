@@ -188,6 +188,7 @@ jobs:
       run: |
         cd openwrt/bin/targets/*/*
         echo "-----------------------------packages--------------------------------------------"
+        df -h packages
         tree packages
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
