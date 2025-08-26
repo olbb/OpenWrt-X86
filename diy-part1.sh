@@ -19,7 +19,7 @@
 
 echo "--------------------------start diy-part1.sh------------------------------------------"
 
-# git checkout d71de44fbc5c5aab2d5c7b6ac6b1bdca5e6c6c23
+git checkout e068a28546d257892b4e3be49e9290ff62da13a3
 git log -n 5 --oneline
 
 sed -i '1i src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main' feeds.conf.default
