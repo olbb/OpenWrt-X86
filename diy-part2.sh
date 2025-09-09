@@ -45,3 +45,18 @@ sed -i "s/timezone='.*'/timezone='CST-8'/g" ./package/base-files/files/bin/confi
 sed -i "/timezone='.*'/a\\\t\t\set system.@system[-1].zonename='Asia/Shanghai'" ./package/base-files/files/bin/config_generate
 sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
 sed -i 's/OpenWrt/Me-X86-Router/g' package/base-files/files/bin/config_generate
+
+mkdir -p files/etc/hotplug.d/iface
+cat > files/etc/hotplug.d/iface/99-myiface <<'EOF'
+#!/bin/sh
+
+# 检查事件是否为 WAN 接口的 "ifup"（连接建立）
+logger "custom_wan called. $INTERFACE - $ACTION"
+[ "$INTERFACE" = "WAN" ] && [ "$ACTION" = "ifupdate" ] && {
+    # 在这里添加你希望执行的任务
+    logger "WAN interface reconnected, running custom task..."
+    # 示例：执行某个命令或脚本
+    /etc/init.d/dockerd restart
+}
+EOF
+chmod +x files/etc/hotplug.d/iface/99-myiface
