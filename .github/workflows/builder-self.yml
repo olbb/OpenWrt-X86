@@ -29,10 +29,11 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
-runs-on:
-  - self-hosted
-  - linux
-  - ubuntu-22.04
+  build:
+    runs-on:
+      - self-hosted
+      - linux
+      - ubuntu-22.04
 
     steps:
 
