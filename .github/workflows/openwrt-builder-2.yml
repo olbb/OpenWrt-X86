@@ -5,7 +5,7 @@
 # See /LICENSE for more information.
 #
 
-name: OpenWrt Builder
+name: OpenWrt Builder 2
 
 on:
   repository_dispatch:
@@ -76,7 +76,6 @@ jobs:
         df -hT
         echo "=============================================================================="
     
-    # 【优化】：升级至 v4，获取更稳定的拉取体验
     - name: Checkout
       uses: actions/checkout@v4
 
@@ -103,17 +102,16 @@ jobs:
         echo "-----------------------------------------------------------------------------"
 
     - name: Clone source code
-      working-directory: ./
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
 
-    # 【优化】：升级至 actions/cache@v4，大幅提升缓存解压与打包速度（采用新版 Zstd）
+    # 【理顺逻辑 1】：挂载 Cache 时的 key 改为校验主仓库根目录的旧 .config，确保首次及后续能精准生成哈希
     - name: Setup ccache
       uses: actions/cache@v4
       with:
         path: openwrt/.ccache
-        key: ${{ runner.os }}-openwrt-ccache-${{ hashFiles('openwrt/.config') }}
+        key: ${{ runner.os }}-openwrt-ccache-${{ hashFiles('.config') }}
         restore-keys: |
           ${{ runner.os }}-openwrt-ccache-
 
@@ -155,12 +153,16 @@ jobs:
       id: package
       run: |
         cd openwrt
-        make defconfig
-        # 【深度优化】：强行启用 ccache 并开启“工具链/主机包”全局缓存，大幅压榨提速空间
+        # 防错：创建物理缓存目录
+        mkdir -p .ccache
+        # 【理顺逻辑 2】：在 make defconfig 之前把 ccache 参数写入，让工具链在生成依赖树时就完美接纳 ccache
         echo "CONFIG_CCACHE=y" >> .config
-        echo "CONFIG_CCACHE_DIR=\"/workdir/openwrt/.ccache\"" >> .config
         echo "CONFIG_TOOLCHAIN_BUILD_WITH_CCACHE=y" >> .config
         echo "CONFIG_HOST_BUILD_WITH_CCACHE=y" >> .config
+        
+        # 让 OpenWrt 带着 ccache 配置去跑完合法的依赖树校验
+        make defconfig
+        
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
@@ -215,7 +217,6 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
-        # 【修复 Bug】：移除了不存在的 UPLOAD_GOFILE 语法错行，避免临门一脚抛出错误
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
