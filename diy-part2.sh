@@ -23,18 +23,7 @@ rm -rf package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-theme-argon.git package/lean/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-app-argon-config.git package/lean/luci-app-argon-config
 
-#./scripts/feeds uninstall ddns-go alist smartdns luci-app-ddns-go luci-app-alist luci-app-smartdns
 
-echo "--------------------------------------start clone---------------------------------"
-pwd
-
-git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
-git clone https://github.com/sbwml/luci-app-openlist2 package/openlist2
-# git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
-
-ls package
-
-echo "-------------------------------------end clone--------------------------------------"
 
 #修改默认IP地址
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
