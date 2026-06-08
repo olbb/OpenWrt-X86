@@ -1,4 +1,3 @@
-#
 # https://github.com/P3TERX/Actions-OpenWrt
 #
 # File: .github/workflows/openwrt-bulder.yml
@@ -10,7 +9,7 @@
 # See /LICENSE for more information.
 #
 
-name: OpenWrt Builder
+name: OpenWrt Builder New
 
 on:
   repository_dispatch:
@@ -41,27 +40,7 @@ jobs:
         df -hT
         echo "=============================================================================="
 
-    - name: "Optimize Disk Space"
-      uses: "hugoalh/disk-space-optimizer-ghaction@v0.8.1"
-      with:
-        operate_sudo: "True"
-        general_include: ".+"
-        general_exclude: |-
-          ^GCC$
-          ^G\+\+$
-          Clang
-          LLVM
-        docker_include: ".+"
-        docker_prune: "True"
-        docker_clean: "True"
-        apt_prune: "True"
-        apt_clean: "True"
-        homebrew_prune: "True"
-        homebrew_clean: "True"
-        npm_prune: "True"
-        npm_clean: "True"
-        os_swap: "True"
-
+    # 1. 移除多余的重复清理插件，保留单极扩容，省下重复扫盘时间
     - name: Freeing up disk space
       uses: easimon/maximize-build-space@master
       with: 
@@ -112,6 +91,15 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
       
+    # 【核心注入】：在 Clone 源码之后，立刻切入现成的 cachewrtbuild 方案
+    - name: Cache Wrt Build
+      uses: stupidloud/cachewrtbuild@main
+      with:
+        ccache: 'true'
+        toolchain: 'true'
+        skip: 'true'
+        prefix: 'openwrt'
+        mixkey: 'x86_64'
 
     - name: Load custom feeds
       run: |
@@ -176,8 +164,9 @@ jobs:
       if: (!cancelled())
       run: df -hT
 
+    # 2. 修正为 v4 确保大体积 bin 上传成功
     - name: Upload bin directory
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v4
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
@@ -195,8 +184,9 @@ jobs:
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
+    # 3. 修正为 v4 防止打包固件报错中断
     - name: Upload firmware directory
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v4
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
@@ -208,7 +198,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
-        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
+        # 4. 彻底移除了原版中因 UPLOAD_GOFILE 未定义导致的 Bash 语法死结行
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
