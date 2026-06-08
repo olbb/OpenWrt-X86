@@ -1,11 +1,16 @@
 #
+# https://github.com/P3TERX/Actions-OpenWrt
+#
+# File: .github/workflows/openwrt-bulder.yml
+# Description: Build OpenWrt using GitHub Actions
+#
 # Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
 #
 # This is free software, licensed under the MIT License.
 # See /LICENSE for more information.
 #
 
-name: OpenWrt Builder 2
+name: OpenWrt Builder
 
 on:
   repository_dispatch:
@@ -77,7 +82,7 @@ jobs:
         echo "=============================================================================="
     
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
 
     - name: Initialization environment
       env:
@@ -102,18 +107,11 @@ jobs:
         echo "-----------------------------------------------------------------------------"
 
     - name: Clone source code
+      working-directory: ./
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-
-    # 【理顺逻辑 1】：挂载 Cache 时的 key 改为校验主仓库根目录的旧 .config，确保首次及后续能精准生成哈希
-    - name: Setup ccache
-      uses: actions/cache@v4
-      with:
-        path: openwrt/.ccache
-        key: ${{ runner.os }}-openwrt-ccache-${{ hashFiles('.config') }}
-        restore-keys: |
-          ${{ runner.os }}-openwrt-ccache-
+      
 
     - name: Load custom feeds
       run: |
@@ -133,6 +131,7 @@ jobs:
         echo '-------------------------------feeds----------------------------------'
         tree -L 3 feeds
         echo '-------------------------------feeds----------------------------------'
+        
 
     - name: Install feeds
       run: |
@@ -153,22 +152,14 @@ jobs:
       id: package
       run: |
         cd openwrt
-        # 防错：创建物理缓存目录
-        mkdir -p .ccache
-        # 【理顺逻辑 2】：在 make defconfig 之前把 ccache 参数写入，让工具链在生成依赖树时就完美接纳 ccache
-        echo "CONFIG_CCACHE=y" >> .config
-        echo "CONFIG_TOOLCHAIN_BUILD_WITH_CCACHE=y" >> .config
-        echo "CONFIG_HOST_BUILD_WITH_CCACHE=y" >> .config
-        
-        # 让 OpenWrt 带着 ccache 配置去跑完合法的依赖树校验
         make defconfig
-        
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
         echo '---------------------------------dl---------------------------------------'
         ls -al ./dl/
         echo '---------------------------------dl---------------------------------------'
+
 
     - name: Compile the firmware
       id: compile
@@ -186,7 +177,7 @@ jobs:
       run: df -hT
 
     - name: Upload bin directory
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
@@ -205,7 +196,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware directory
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
@@ -217,10 +208,11 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
+        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@master
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -230,13 +222,13 @@ jobs:
         files: ${{ env.FIRMWARE }}/*
 
     - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@v2
+      uses: Mattraks/delete-workflow-runs@main
       with:
         retain_days: 0
         keep_minimum_runs: 2
 
     - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.3.4
+      uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 3
