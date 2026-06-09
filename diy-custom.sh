@@ -15,5 +15,11 @@ ls package
 
 echo "-------------------------------------end clone--------------------------------------"
 
-
+# 针对 grub 编译极慢的压榨优化
+if [ -d "package/boot/grub2" ]; then
+    # 修改 grub 的 Makefile，在配置中加上禁用不需要的组件，减少无意义的串行编译
+    sed -i 's/--disable-werror/--disable-werror --disable-efiemu --disable-grub-emu-usb --disable-nls/g' package/boot/grub2/Makefile
+    echo "---------------------------------------- set grub2 finished-----------------------------------------------------"
+    cat package/boot/grub2/Makefile
+fi
 
