@@ -149,6 +149,25 @@ jobs:
         echo '---------------------------------dl---------------------------------------'
 
 
+    - name: Inspect ROOTFS Configuration & Target Profile
+      run: |
+        echo "================================================="
+        echo "1. 检查当前 .config 文件中的设定值："
+        grep "CONFIG_TARGET_ROOTFS_PARTSIZE" .config || echo "未在 .config 中找到该项"
+        echo "================================================="
+        
+        echo "2. 检查 target 默认配置（config-default）中的设定值："
+        grep "CONFIG_TARGET_ROOTFS_PARTSIZE" target/linux/x86/config-default target/linux/x86/64/config-default 2>/dev/null || true
+        echo "================================================="
+        
+        echo "3. 检查 Makefile 中关于 ROOTFS_PARTSIZE 的规则定义："
+        grep -n "ROOTFS_PARTSIZE" target/linux/x86/image/Makefile
+        echo "================================================="
+    
+        # 故意返回错误码，强制中断后续的编译流程
+        exit 1
+
+
     - name: Compile the firmware
       id: compile
       run: |
