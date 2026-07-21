@@ -141,16 +141,7 @@ jobs:
       run: |
         cd openwrt
         make defconfig
-        make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
-        echo '---------------------------------dl---------------------------------------'
-        ls -al ./dl/
-        echo '---------------------------------dl---------------------------------------'
 
-
-    - name: Inspect ROOTFS Configuration & Target Profile
-      run: |
         echo "================================================="
         echo "1. 检查当前 .config 文件中的设定值："
         grep "CONFIG_TARGET_ROOTFS_PARTSIZE" .config || echo "未在 .config 中找到该项"
@@ -166,6 +157,16 @@ jobs:
     
         # 故意返回错误码，强制中断后续的编译流程
         exit 1
+        
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+        echo '---------------------------------dl---------------------------------------'
+        ls -al ./dl/
+        echo '---------------------------------dl---------------------------------------'
+
+
+       
 
 
     - name: Compile the firmware
