@@ -141,30 +141,94 @@ jobs:
       run: |
         cd openwrt
         make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+        echo '---------------------------------dl---------------------------------------'
+        ls -al ./dl/
+        echo '---------------------------------dl---------------------------------------'
 
-        echo "================================================="
-        echo "1. 检查当前 .config 文件中的设定值："
-        grep "CONFIG_TARGET_ROOTFS_PARTSIZE" .config || echo "未在 .config 中找到该项"
-        echo "================================================="
+
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: Analyze Compilation Time
+      if: always()
+      run: |
+        cd openwrt
+        sh $GITHUB_WORKSPACE/check_time.sh
         
-        echo "2. 检查 target 默认配置（config-default）中的设定值："
-        grep "CONFIG_TARGET_ROOTFS_PARTSIZE" target/linux/x86/config-default target/linux/x86/64/config-default 2>/dev/null || true
-        echo "================================================="
-        
-        echo "3. 检查 Makefile 中关于 ROOTFS_PARTSIZE 的规则定义："
-        grep -n "ROOTFS_PARTSIZE" target/linux/x86/image/Makefile
-        echo "================================================="
-    
-        make -I target/linux/x86/image TOPDIR=$PWD -f - debug << 'EOF'
-        include .config
-        include rules.mk
-        include target/linux/x86/image/Makefile
-        
-        debug:
-        	@echo "====================================="
-        	@echo "[DEBUG] CONFIG_TARGET_ROOTFS_PARTSIZE = [$(CONFIG_TARGET_ROOTFS_PARTSIZE)]"
-        	@echo "[DEBUG] ROOTFS_PARTSIZE = [$(ROOTFS_PARTSIZE)]"
-        	@echo "====================================="
-        EOF
-        
-  
+
+    - name: Check space usage
+      if: (!cancelled())
+      run: df -hT
+
+    # 2. 修正为 v4 确保大体积 bin 上传成功
+    - name: Upload bin directory
+      uses: actions/upload-artifact@v4
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: openwrt/bin
+
+    - name: Organize files
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      run: |
+        cd openwrt/bin/targets/*/*
+        echo "-----------------------------packages--------------------------------------------"
+        df -h packages
+        tree packages
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    # 3. 修正为 v4 防止打包固件报错中断
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@v4
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+
+    - name: Generate release tag
+      id: tag
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        touch release.txt
+        # 4. 彻底移除了原版中因 UPLOAD_GOFILE 未定义导致的 Bash 语法死结行
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@master
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        retain_days: 0
+        keep_minimum_runs: 2
+
+    - name: Remove old Releases
+      uses: dev-drprasad/delete-older-releases@master
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
