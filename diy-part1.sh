@@ -25,6 +25,6 @@ git log -n 5 --oneline
 sed -i '1i src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main' feeds.conf.default
 sed -i '2i src-git passwall https://github.com/Openwrt-Passwall/openwrt-passwall.git;main' feeds.conf.default
 
-
+sed -i -e '/IMAGE\/rootfs\.img\(\.gz\)\? :=/s/ | pad-to \$(ROOTFS_PARTSIZE)//' target/linux/x86/image/Makefile
 
 
