@@ -155,8 +155,13 @@ jobs:
         grep -n "ROOTFS_PARTSIZE" target/linux/x86/image/Makefile
         echo "================================================="
     
-        # 故意返回错误码，强制中断后续的编译流程
-        exit 1
+        # 只要 openwrt 目录下有 .config，这条命令就会瞬间打印变量并报错中断 Workflow
+        make -C openwrt/target/linux/x86/image TOPDIR=$PWD/openwrt \
+        --eval='$(info =====================================)' \
+        --eval='$(info [DEBUG] CONFIG = $(CONFIG_TARGET_ROOTFS_PARTSIZE))' \
+        --eval='$(info [DEBUG] ROOTFS = $(ROOTFS_PARTSIZE))' \
+        --eval='$(info =====================================)' \
+        --eval='$(error [OK] 打印完毕，主动中断避免继续编译)'
         
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
