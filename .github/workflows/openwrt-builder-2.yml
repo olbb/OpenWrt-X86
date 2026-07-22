@@ -155,13 +155,17 @@ jobs:
         grep -n "ROOTFS_PARTSIZE" target/linux/x86/image/Makefile
         echo "================================================="
     
-        # 只要 openwrt 目录下有 .config，这条命令就会瞬间打印变量并报错中断 Workflow
-        make -C target/linux/x86/image TOPDIR=$PWD \
-        --eval='$(info =====================================)' \
-        --eval='$(info [DEBUG] CONFIG = $(CONFIG_TARGET_ROOTFS_PARTSIZE))' \
-        --eval='$(info [DEBUG] ROOTFS = $(ROOTFS_PARTSIZE))' \
-        --eval='$(info =====================================)' \
-        --eval='$(error [OK] 打印完毕，主动中断避免继续编译)'
+        make TOPDIR=$PWD -f - << 'EOF'
+        include .config
+        include rules.mk
+        include target/linux/x86/image/Makefile
+        
+        debug:
+        	@echo "====================================="
+        	@echo "[DEBUG] CONFIG_TARGET_ROOTFS_PARTSIZE = [$(CONFIG_TARGET_ROOTFS_PARTSIZE)]"
+        	@echo "[DEBUG] ROOTFS_PARTSIZE = [$(ROOTFS_PARTSIZE)]"
+        	@echo "====================================="
+        EOF
         
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
