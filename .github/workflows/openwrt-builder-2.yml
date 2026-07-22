@@ -155,7 +155,7 @@ jobs:
         grep -n "ROOTFS_PARTSIZE" target/linux/x86/image/Makefile
         echo "================================================="
     
-        make TOPDIR=$PWD -f - << 'EOF'
+        make -I target/linux/x86/image TOPDIR=$PWD -f - << 'EOF'
         include .config
         include rules.mk
         include target/linux/x86/image/Makefile
