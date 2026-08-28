@@ -20,9 +20,11 @@ if [ -d "package/boot/grub2" ]; then
     # 修改 grub 的 Makefile，在配置中加上禁用不需要的组件，减少无意义的串行编译
     sed -i 's/--disable-werror/--disable-werror --disable-efiemu --disable-grub-emu-usb --disable-nls/g' package/boot/grub2/Makefile
     echo "---------------------------------------- set grub2 finished-----------------------------------------------------"
-    cat package/boot/grub2/Makefile
+    # cat package/boot/grub2/Makefile
 fi
 
+pwd 
 cd feeds/packages
 # 直接下载该 PR 的 patch 并强制应用
 curl -s1 https://github.com/openwrt/packages/pull/30288.patch | git apply --ignore-whitespace --whitespace=nowarn || true
+tree feeds/packages/‎utils/dockerd/
