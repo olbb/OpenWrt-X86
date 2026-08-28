@@ -50,10 +50,25 @@ logger "custom_wan called. $INTERFACE - $ACTION"
 EOF
 chmod +x files/etc/hotplug.d/iface/99-myiface
 
-pwd 
+# 确保在 OpenWrt 根目录下操作
+cd /home/runner/work/OpenWrt-X86/OpenWrt-X86/openwrt
+
+# 1. 确认目标目录存在（去掉隐形乱码）
+ls -ld feeds/packages/utils/dockerd
+
+# 2. 进入 packages 目录并下载补丁文件
 cd feeds/packages
-# 直接下载该 PR 的 patch 并强制应用
-curl -s1 https://github.com/openwrt/packages/pull/30288.patch | git apply --ignore-whitespace --whitespace=nowarn || true
+curl -sSL https://github.com/openwrt/packages/pull/30288.patch -o dockerd_fix.patch
+
+# 3. 校验并应用补丁
+if [ -s dockerd_fix.patch ]; then
+    git apply --ignore-whitespace --whitespace=nowarn dockerd_fix.patch && echo "Patch applied successfully!"
+    rm -f dockerd_fix.patch
+else
+    echo "Error: Downloaded patch file is empty!"
+    exit 1
+fi
 tree feeds/packages/‎utils/dockerd/
+# 4. 返回根目录重新刷新 install
 cd ../..
 ./scripts/feeds install -a -p packages
