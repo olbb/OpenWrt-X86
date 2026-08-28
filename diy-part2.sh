@@ -49,3 +49,11 @@ logger "custom_wan called. $INTERFACE - $ACTION"
 }
 EOF
 chmod +x files/etc/hotplug.d/iface/99-myiface
+
+pwd 
+cd feeds/packages
+# 直接下载该 PR 的 patch 并强制应用
+curl -s1 https://github.com/openwrt/packages/pull/30288.patch | git apply --ignore-whitespace --whitespace=nowarn || true
+tree feeds/packages/‎utils/dockerd/
+cd ../..
+./scripts/feeds install -a -p packages
