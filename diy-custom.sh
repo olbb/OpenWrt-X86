@@ -9,7 +9,7 @@ git clone https://github.com/pymumu/luci-app-smartdns.git feeds/luci/application
 
 git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
 git clone https://github.com/sbwml/luci-app-openlist2 package/openlist2
-# git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
+
 
 ls package
 
@@ -23,3 +23,6 @@ if [ -d "package/boot/grub2" ]; then
     cat package/boot/grub2/Makefile
 fi
 
+cd feeds/packages
+# 直接下载该 PR 的 patch 并强制应用
+curl -s1 https://github.com/openwrt/packages/pull/30288.patch | git apply --ignore-whitespace --whitespace=nowarn || true
