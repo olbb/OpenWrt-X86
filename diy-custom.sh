@@ -6,6 +6,7 @@ echo "--------------------------------------start clone-------------------------
 pwd
 git clone https://github.com/pymumu/openwrt-smartdns.git feeds/packages/net/smartdns/
 git clone https://github.com/pymumu/luci-app-smartdns.git feeds/luci/applications/luci-app-smartdns/
+sed -i 's/CC=$(TARGET_CC)/CC="$(TARGET_CC)"/g' feeds/packages/net/smartdns/Makefile
 
 git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
 git clone https://github.com/sbwml/luci-app-openlist2 package/openlist2
