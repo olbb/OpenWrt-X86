@@ -11,6 +11,10 @@ sed -i 's/CC=$(TARGET_CC)/CC="$(TARGET_CC)"/g' feeds/packages/net/smartdns/Makef
 git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
 git clone https://github.com/sbwml/luci-app-openlist2 package/openlist2
 
+rm -rf /tmp/dockerman
+git clone https://github.com/lisaac/luci-app-dockerman.git /tmp/dockerman
+mv /tmp/dockerman/applications/luci-app-dockerman/ feeds/luci/applications/luci-app-dockerman
+
 
 ls package
 
