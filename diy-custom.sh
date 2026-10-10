@@ -12,6 +12,11 @@ git clone https://github.com/sirpdboy/luci-app-ddns-go.git package/ddns-go
 git clone https://github.com/sbwml/luci-app-openlist2 package/openlist2
 
 rm -rf /tmp/dockerman
+# 添加 luci-lib-docker 依赖
+git clone https://github.com/lisaac/luci-lib-docker.git \
+    package/luci-lib-docker
+
+# 添加 luci-app-dockerman
 git clone https://github.com/lisaac/luci-app-dockerman.git /tmp/dockerman
 mv /tmp/dockerman/applications/luci-app-dockerman/ feeds/luci/applications/luci-app-dockerman
 
