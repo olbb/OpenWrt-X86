@@ -1,0 +1,121 @@
+#!/bin/sh
+
+TAG="wan-docker-recovery"
+STATE_DIR="/tmp/wan-docker-recovery"
+COOLDOWN=120
+
+mkdir -p "$STATE_DIR" || exit 1
+
+# 过滤接口名，避免把异常字符用于文件路径
+IFACE="$(printf '%s' "$INTERFACE" | tr -cd 'A-Za-z0-9_.-')"
+[ -n "$IFACE" ] || exit 0
+
+logger -t "$TAG" "event interface=$INTERFACE action=$ACTION device=$DEVICE"
+
+# 断线或连接失败：记录该接口曾经断开
+case "$ACTION" in
+    ifdown|ifup-failed)
+        touch "$STATE_DIR/down.$IFACE"
+        logger -t "$TAG" "recorded disconnect: $IFACE"
+        exit 0
+        ;;
+    ifup|ifupdate)
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+
+# 查询接口当前状态
+STATUS="$(ubus call "network.interface.$IFACE" status 2>/dev/null)" || exit 0
+UP="$(printf '%s\n' "$STATUS" | jsonfilter -e '@.up' 2>/dev/null)"
+[ "$UP" = "true" ] || exit 0
+
+UPTIME="$(printf '%s\n' "$STATUS" | jsonfilter -e '@.uptime' 2>/dev/null)"
+case "$UPTIME" in
+    ''|*[!0-9]*) exit 0 ;;
+esac
+
+# 优先识别 IPv4 默认路由接口
+MASK4="$(printf '%s\n' "$STATUS" |
+    jsonfilter -e '@.route[@.target="0.0.0.0"].mask' 2>/dev/null |
+    head -n 1)"
+
+HAS_DEFAULT=0
+if [ "$MASK4" = "0" ] && [ -n "$(ip -4 route show default 2>/dev/null)" ]; then
+    HAS_DEFAULT=1
+else
+    # 仅在系统没有 IPv4 默认路由时，才考虑 IPv6 默认路由
+    if [ -z "$(ip -4 route show default 2>/dev/null)" ]; then
+        MASK6="$(printf '%s\n' "$STATUS" |
+            jsonfilter -e '@.route[@.target="::"].mask' 2>/dev/null |
+            head -n 1)"
+        [ "$MASK6" = "0" ] && HAS_DEFAULT=1
+    fi
+fi
+
+# 非默认路由接口不执行恢复；不覆盖之前的断线标记
+[ "$HAS_DEFAULT" = "1" ] || exit 0
+
+NOW="$(date +%s)"
+case "$NOW" in
+    ''|*[!0-9]*) exit 0 ;;
+esac
+
+# 用“当前时间 - 接口 uptime”估算接口启动时间。
+# 即使 netifd 崩溃后没有产生 ifdown，也能尝试识别接口重新建立。
+START=$((NOW - UPTIME))
+BASELINE="$STATE_DIR/start.$IFACE"
+PREV_START=""
+[ -f "$BASELINE" ] && PREV_START="$(cat "$BASELINE" 2>/dev/null)"
+
+RECONNECTED=0
+
+# 正常收到断线事件
+[ -f "$STATE_DIR/down.$IFACE" ] && RECONNECTED=1
+
+# 没收到断线事件时，检查接口启动时间是否明显改变
+case "$PREV_START" in
+    ''|*[!0-9]*) ;;
+    *)
+        DELTA=$((START - PREV_START))
+        [ "$DELTA" -lt 0 ] && DELTA=$((-DELTA))
+        [ "$DELTA" -gt 30 ] && RECONNECTED=1
+        ;;
+esac
+
+# 每次有效观察都更新基线
+printf '%s\n' "$START" > "$BASELINE"
+
+[ "$RECONNECTED" = "1" ] || exit 0
+
+# 多个相关接口可能连续触发，只允许短时间内执行一次
+LOCK="$STATE_DIR/lock"
+if ! mkdir "$LOCK" 2>/dev/null; then
+    exit 0
+fi
+
+LAST=0
+[ -f "$STATE_DIR/last-recovery" ] &&
+    LAST="$(cat "$STATE_DIR/last-recovery" 2>/dev/null)"
+case "$LAST" in
+    ''|*[!0-9]*) LAST=0 ;;
+esac
+
+NOW="$(date +%s)"
+if [ $((NOW - LAST)) -lt "$COOLDOWN" ]; then
+    rmdir "$LOCK" 2>/dev/null
+    logger -t "$TAG" "recovery suppressed by cooldown: $IFACE"
+    exit 0
+fi
+
+# 先消除触发条件，再执行操作，避免重复事件再次触发
+rm -f "$STATE_DIR/down.$IFACE"
+printf '%s\n' "$NOW" > "$STATE_DIR/last-recovery"
+rmdir "$LOCK" 2>/dev/null
+
+logger -t "$TAG" "WAN/default-route reconnection detected on $IFACE; restarting dockerd"
+/etc/init.d/dockerd restart
+RC=$?
+logger -t "$TAG" "dockerd restart finished, rc=$RC"
+exit "$RC"

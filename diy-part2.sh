@@ -36,42 +36,10 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/M
 sed -i 's/OpenWrt/Me-X86-Router/g' package/base-files/files/bin/config_generate
 
 mkdir -p files/etc/hotplug.d/iface
-cat > files/etc/hotplug.d/iface/99-myiface <<'EOF'
-#!/bin/sh
-
-# 检查事件是否为 WAN 接口的 "ifup"（连接建立）
-logger "custom_wan called. $INTERFACE - $ACTION"
-[ "$INTERFACE" = "WAN" ] && [ "$ACTION" = "ifupdate" ] && {
-    # 在这里添加你希望执行的任务
-    logger "WAN interface reconnected, running custom task..."
-    # 示例：执行某个命令或脚本
-    /etc/init.d/dockerd restart
-}
-EOF
+cp "$GITHUB_WORKSPACE/hotfix/99-myiface" files/etc/hotplug.d/iface/99-myiface
 chmod +x files/etc/hotplug.d/iface/99-myiface
 
 # Remove unsupported Passwall opkg feeds
 sed -i '/passwall_packages/d; /passwall2/d' package/lean/default-settings/files/zzz-default-settings
 
-# 确保在 OpenWrt 根目录下操作
-cd /home/runner/work/OpenWrt-X86/OpenWrt-X86/openwrt
 
-# 1. 确认目标目录存在（去掉隐形乱码）
-ls -ld feeds/packages/utils/dockerd
-
-# 2. 进入 packages 目录并下载补丁文件
-cd feeds/packages
-curl -sSL https://github.com/openwrt/packages/pull/30288.patch -o dockerd_fix.patch
-
-# 3. 校验并应用补丁
-if [ -s dockerd_fix.patch ]; then
-    git apply --ignore-whitespace --whitespace=nowarn dockerd_fix.patch && echo "Patch applied successfully!"
-    rm -f dockerd_fix.patch
-else
-    echo "Error: Downloaded patch file is empty!"
-    exit 1
-fi
-tree feeds/packages/‎utils/dockerd/
-# 4. 返回根目录重新刷新 install
-cd ../..
-./scripts/feeds install -a -p packages
