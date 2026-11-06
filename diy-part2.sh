@@ -50,6 +50,9 @@ logger "custom_wan called. $INTERFACE - $ACTION"
 EOF
 chmod +x files/etc/hotplug.d/iface/99-myiface
 
+# Remove unsupported Passwall opkg feeds
+sed -i '/passwall_packages/d; /passwall2/d' package/lean/default-settings/files/zzz-default-settings
+
 # 确保在 OpenWrt 根目录下操作
 cd /home/runner/work/OpenWrt-X86/OpenWrt-X86/openwrt
 
